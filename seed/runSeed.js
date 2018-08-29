@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const seedDB = require('./seed');
-const DB_URL = 'mongodb://localhost:27017/northcoders_news';
+const { DB_URL } = require('../config');
 let data = require('./devData');
 
 mongoose.connect(DB_URL, { useNewUrlParser: true })
