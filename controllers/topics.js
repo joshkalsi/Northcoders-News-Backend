@@ -18,20 +18,20 @@ exports.getArticlesByTopicSlug = (req, res, next) => {
 };
 
 exports.postArticle = (req, res, next) => {
-  User.find({ username: req.body.created_by })
+  User.findOne({ username: req.body.created_by })
     .then(user => {
       const article = { ...req.body };
       article.created_at = Date.now();
       article.belongs_to = req.params.topic_slug;
-      article.created_by = user[0]._id;
+      article.created_by = user._id;
 
       return Article.create(article)
         .then(article => {
-          return Article.find({ _id: article._id })
+          return Article.findOne({ _id: article._id })
             .populate('created_by');
         })
         .then(article => {
-          res.status(201).send({ article: article[0] });
+          res.status(201).send({ article: article });
         });
     })
     .catch(err => next(err));
