@@ -1,8 +1,9 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const apiRouter = require('./routes/apiRouter');
-let { DB_URL } = require('./config');
+let DB_URL;
 if (process.env.NODE_ENV === 'production') DB_URL = process.env.MONGODB_URI;
+else DB_URL = require('./config').DB_URL;
 
 const app = express();
 
