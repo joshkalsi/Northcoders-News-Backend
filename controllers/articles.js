@@ -13,15 +13,20 @@ exports.getArticleByID = (req, res, next) => {
   return Article.findOne({ _id: req.params.article_id })
     .populate('created_by')
     .then(article => {
+      if (!article) return Promise.reject({ status: 404, msg: 'Page Not Found' });
       res.status(200).send({ article });
     })
-    .catch(err => next(err));
+    .catch(err => {
+      if (err.name === 'CastError') next({ status: 400, msg: 'Bad Request' });
+      else next(err);
+    });
 };
 
 exports.getCommentsforArticle = (req, res, next) => {
   return Article.findOne({ _id: req.params.article_id })
     .populate('created_by')
     .then(article => {
+      if (!article) return Promise.reject({ status: 404, msg: 'Page Not Found' });
       return Comment.find({ belongs_to: article._id })
         .populate('belongs_to')
         .populate('created_by');
@@ -29,28 +34,40 @@ exports.getCommentsforArticle = (req, res, next) => {
     .then(comments => {
       res.status(200).send({ comments });
     })
-    .catch(err => next(err));
+    .catch(err => {
+      if (err.name === 'CastError') next({ status: 400, msg: 'Bad Request' });
+      else next(err);
+    });
 };
 
 exports.createComment = (req, res, next) => {
-  return User.findOne({ username: req.body.created_by })
+  return Article.findById(req.params.article_id)
+    .then(article => {
+      if (!article) return Promise.reject({ status: 404, msg: 'Page Not Found' });
+      return User.findOne({ username: req.body.created_by });
+    })
     .then(user => {
+      if (!user) return Promise.reject({ status: 400, msg: 'Bad Request' });
       const comment = { ...req.body };
       comment.belongs_to = req.params.article_id;
       comment.created_at = Date.now();
       comment.created_by = user._id;
-
-      return Comment.create(comment)
-        .then(comment => {
-          return Comment.findOne({ _id: comment._id })
-            .populate('created_by')
-            .populate('belongs_to');
-        })
-        .then(comment => {
-          res.status(201).send({ comment });
-        })
-        .catch(err => next(err));
+      return Comment.create(comment);
+    })
+    .then(comment => {
+      return Comment.findOne({ _id: comment._id })
+        .populate('created_by')
+        .populate('belongs_to');
+    })
+    .then(comment => {
+      res.status(201).send({ comment });
+    })
+    .catch(err => {
+      if (err.name === 'CastError') next({ status: 400, msg: 'Bad Request' });
+      else if (err.name === 'ValidationError') next({ status: 400, msg: 'Bad Request' });
+      else next(err);
     });
+
 };
 
 exports.incrementOrDecrementVotes = (req, res, next) => {
@@ -59,10 +76,16 @@ exports.incrementOrDecrementVotes = (req, res, next) => {
     down: -1,
     undefined: 0
   };
+  if (!/up|down/.test(req.query.vote) && req.query.vote) next({ status: 400, msg: 'Bad Request' });
   return Article.findOneAndUpdate({ _id: req.params.article_id }, { $inc: { votes: incrementValue[req.query.vote] } }, { new: true })
     .populate('created_by')
     .then(article => {
+      if (!article) return Promise.reject({ status: 404, msg: 'Page Not Found' });
       res.status(200).send({ article });
     })
-    .catch(err => next(err));
+    .catch(err => {
+      if (err.name === 'CastError') next({ status: 400, msg: 'Bad Request' });
+      else if (err.name === 'ValidationError') next({ status: 400, msg: 'Bad Request' });
+      else next(err);
+    });
 };

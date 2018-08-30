@@ -17,5 +17,11 @@ mongoose.connect(DB_URL, { useNewUrlParser: true })
 
 app.use('/api', apiRouter);
 
+app.use((err, req, res, next) => {
+  if (err.status) {
+    res.status(err.status).send(err);
+  }
+  else res.status(500).send({ msg: 'Internal Servor Error', status: 500 });
+});
 
 module.exports = app;
