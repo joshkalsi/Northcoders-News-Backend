@@ -8,7 +8,7 @@ const seedDB = require('../seed/seed');
 const testData = require('../seed/testData');
 
 describe('nc_news', () => {
-  // let commentDocs;
+  let commentDocs;
   let articleDocs;
   // let topicDocs;
   // let userDocs;
@@ -16,7 +16,7 @@ describe('nc_news', () => {
   beforeEach(() => {
     return seedDB(testData)
       .then((docs) => {
-        // commentDocs = docs[0];
+        commentDocs = docs[0];
         articleDocs = docs[1];
         // topicDocs = docs[2];
         // userDocs = docs[3];
@@ -239,7 +239,7 @@ describe('nc_news', () => {
       });
     });
 
-    describe('PATCH /api/articles/:article_id - decrement vote', () => {
+    describe('PATCH /api/articles/:article_id', () => {
       it('PATCH with a valid article_id and query will increment votes and return 200 code', () => {
         return request
           .patch(`/api/articles/${articleDocs[0]._id}?vote=up`)
@@ -303,6 +303,74 @@ describe('nc_news', () => {
           });
       });
     });
+  });
 
+  // ----------------------------comments----------------------------
+
+  describe('/api/comments', () => {
+    describe('PATCH /api/comments/:comment_id', () => {
+      it('PATCH with a valid comment_id and query will increment votes and return 200 code', () => {
+        return request
+          .patch(`/api/comments/${commentDocs[0]._id}?vote=up`)
+          .expect(200)
+          .then(res => {
+            expect(res.body).to.have.all.keys('comment');
+            expect(res.body.comment.belongs_to._id).to.equal(`${articleDocs[0]._id}`);
+            expect(res.body.comment.votes).to.equal(8);
+          });
+      });
+      it('PATCH with a valid comment_id and query will decrement votes and return 200 code', () => {
+        return request
+          .patch(`/api/comments/${commentDocs[0]._id}?vote=down`)
+          .expect(200)
+          .then(res => {
+            expect(res.body).to.have.all.keys('comment');
+            expect(res.body.comment.belongs_to._id).to.equal(`${articleDocs[0]._id}`);
+            expect(res.body.comment.votes).to.equal(6);
+          });
+      });
+      it('PATCH with a valid comment_id but no query will not affect votes', () => {
+        return request
+          .patch(`/api/comments/${commentDocs[0]._id}`)
+          .expect(200)
+          .then(res => {
+            expect(res.body).to.have.all.keys('comment');
+            expect(res.body.comment.belongs_to._id).to.equal(`${articleDocs[0]._id}`);
+            expect(res.body.comment.votes).to.equal(7);
+          });
+      });
+      it('PATCH with invalid comment_id will return 400', () => {
+        return request
+          .patch(`/api/comments/test_id`)
+          .expect(400)
+          .then(res => {
+            expect(res.body.msg).to.equal('Bad Request');
+          });
+      });
+      it('PATCH with valid but non-present comment_id will return 404', () => {
+        return request
+          .patch(`/api/comments/507f191e810c19729de860ea`)
+          .expect(404)
+          .then(res => {
+            expect(res.body.msg).to.equal('Page Not Found');
+          });
+      });
+      it('PATCH with valid but non-present comment_id will return 404', () => {
+        return request
+          .patch(`/api/comments/507f191e810c19729de860ea`)
+          .expect(404)
+          .then(res => {
+            expect(res.body.msg).to.equal('Page Not Found');
+          });
+      });
+      it('PATCH with invalid query returns 400', () => {
+        return request
+          .patch(`/api/comments/${commentDocs[0]._id}?vote=3`)
+          .expect(400)
+          .then(res => {
+            expect(res.body.msg).to.equal('Bad Request');
+          });
+      });
+    });
   });
 });
