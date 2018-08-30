@@ -11,7 +11,7 @@ describe('nc_news', () => {
   let commentDocs;
   let articleDocs;
   // let topicDocs;
-  // let userDocs;
+  let userDocs;
 
   beforeEach(() => {
     return seedDB(testData)
@@ -19,7 +19,7 @@ describe('nc_news', () => {
         commentDocs = docs[0];
         articleDocs = docs[1];
         // topicDocs = docs[2];
-        // userDocs = docs[3];
+        userDocs = docs[3];
       });
   });
 
@@ -29,10 +29,12 @@ describe('nc_news', () => {
         console.log('Disconnected');
       });
   });
-
+  // =============================================================
   // ============================TESTS============================
+  // =============================================================
 
   // ----------------------------api----------------------------
+
   describe('/api', () => {
     describe('GET /api', () => {
       it('GET returns a 200 and a html page', () => {
@@ -121,7 +123,9 @@ describe('nc_news', () => {
       });
     });
   });
+
   //  ----------------------------articles----------------------------
+
   describe('/api/articles', () => {
     describe('GET /api/articles', () => {
       it('GET returns all articles and 200 code', () => {
@@ -387,6 +391,39 @@ describe('nc_news', () => {
       it('DELETE with valid but non-present comment_id will return 404', () => {
         return request
           .delete(`/api/comments/507f191e810c19729de860ea`)
+          .expect(404)
+          .then(res => {
+            expect(res.body.msg).to.equal('Page Not Found');
+          });
+      });
+    });
+  });
+
+  // ----------------------------users----------------------------
+
+  describe('/api/users', () => {
+    describe('GET /api/users/:username', () => {
+      it('GET returns user object and 200 code', () => {
+        return request
+          .get('/api/users/butter_bridge')
+          .expect(200)
+          .then(res => {
+            expect(res.body).to.have.all.keys('user');
+            expect(res.body.user.username).to.equal('butter_bridge');
+            expect(res.body.user._id).to.equal(`${userDocs[0]._id}`);
+          });
+      });
+      it('GET with invalid username will return 400', () => {
+        return request
+          .get(`/api/users/USER`)
+          .expect(400)
+          .then(res => {
+            expect(res.body.msg).to.equal('Bad Request');
+          });
+      });
+      it('GET with valid but non-present username will return 404', () => {
+        return request
+          .get(`/api/users/testuser`)
           .expect(404)
           .then(res => {
             expect(res.body.msg).to.equal('Page Not Found');
