@@ -1,14 +1,15 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const apiRouter = require('./routes/apiRouter');
-const { DB_URL } = require('./config');
+let { DB_URL } = require('./config');
+if (process.env.NODE_ENV === 'production') DB_URL = process.env.MONGODB_URI;
 
 const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({
   extended: true
-}))
+}));
 
 mongoose.connect(DB_URL, { useNewUrlParser: true })
   .then(() => {
