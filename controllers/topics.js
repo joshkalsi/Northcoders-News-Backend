@@ -41,7 +41,8 @@ exports.postArticle = (req, res, next) => {
         .populate('created_by');
     })
     .then(article => {
-      res.status(201).send({ article: article });
+      const modArticle = { ...article._doc, comment_count: 0 };
+      res.status(201).send({ modArticle });
     })
     .catch(err => next(err));
 };

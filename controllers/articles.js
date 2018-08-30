@@ -4,7 +4,18 @@ exports.getArticles = (req, res, next) => {
   return Article.find()
     .populate('created_by')
     .then(articles => {
-      res.status(200).send({ articles });
+      const articleComments = articles.map(article => {
+        return Comment.find({ belongs_to: article._id });
+      });
+      return Promise.all([Promise.all(articleComments), articles]);
+    })
+    .then(([comments, articles]) => {
+      const modArticles = articles.map((article, index) => {
+        let modArticle = { ...article._doc, comment_count: 0 };
+        modArticle.comment_count = comments[index].length;
+        return modArticle;
+      });
+      res.send({ modArticles });
     })
     .catch(err => next(err));
 };
@@ -14,7 +25,14 @@ exports.getArticleByID = (req, res, next) => {
     .populate('created_by')
     .then(article => {
       if (!article) return Promise.reject({ status: 404, msg: 'Page Not Found' });
-      res.status(200).send({ article });
+      return Promise.all([Comment.find({ belongs_to: article._id })
+        .populate('belongs_to')
+        .populate('created_by'), article]);
+    })
+    .then(([comments, article]) => {
+      const modArticle = { ...article._doc, comment_count: 0 };
+      modArticle.comment_count = comments.length;
+      res.status(200).send({ article: modArticle });
     })
     .catch(err => {
       if (err.name === 'CastError') next({ status: 400, msg: 'Bad Request' });

@@ -27,7 +27,10 @@ app.use((err, req, res, next) => {
   if (err.status) {
     res.status(err.status).send(err);
   }
-  else res.status(500).send({ msg: 'Internal Servor Error', status: 500 });
+  else {
+    res.status(500).send({ msg: 'Internal Servor Error', status: 500 });
+    console.log(err);
+  }
 });
 
 module.exports = app;
