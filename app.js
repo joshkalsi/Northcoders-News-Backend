@@ -17,6 +17,10 @@ mongoose.connect(DB_URL, { useNewUrlParser: true })
     console.log(`connected to ${DB_URL}`);
   });
 
+app.get('/', (req, res) => {
+  res.status(200).send('Homepage');
+});
+
 app.use('/api', apiRouter);
 
 app.use((err, req, res, next) => {
