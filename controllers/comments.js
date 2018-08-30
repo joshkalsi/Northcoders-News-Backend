@@ -20,3 +20,21 @@ exports.incrementOrDecrementVotes = (req, res, next) => {
       else next(err);
     });
 };
+
+exports.deleteComment = (req, res, next) => {
+  return Comment.findById(req.params.comment_id)
+    .then(comment => {
+      if (!comment) return Promise.reject({ status: 404, msg: 'Page Not Found' });
+      return Comment.findByIdAndRemove({ _id: req.params.comment_id })
+        .populate('created_by')
+        .populate('belongs_to');
+    })
+    .then(comment => {
+      res.status(200).send({ comment });
+    })
+    .catch(err => {
+      if (err.name === 'CastError') next({ status: 400, msg: 'Bad Request' });
+      else if (err.name === 'ValidationError') next({ status: 400, msg: 'Bad Request' });
+      else next(err);
+    });
+};

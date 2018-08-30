@@ -355,20 +355,41 @@ describe('nc_news', () => {
             expect(res.body.msg).to.equal('Page Not Found');
           });
       });
-      it('PATCH with valid but non-present comment_id will return 404', () => {
-        return request
-          .patch(`/api/comments/507f191e810c19729de860ea`)
-          .expect(404)
-          .then(res => {
-            expect(res.body.msg).to.equal('Page Not Found');
-          });
-      });
       it('PATCH with invalid query returns 400', () => {
         return request
           .patch(`/api/comments/${commentDocs[0]._id}?vote=3`)
           .expect(400)
           .then(res => {
             expect(res.body.msg).to.equal('Bad Request');
+          });
+      });
+    });
+
+    describe('DELETE /api/comments/:comments_id', () => {
+      it('DELETE removes comment with given ID and returns deleted comment with 200', () => {
+        return request
+          .delete(`/api/comments/${commentDocs[0]._id}`)
+          .expect(200)
+          .then(res => {
+            expect(res.body).to.have.all.keys('comment');
+            expect(res.body.comment.belongs_to._id).to.equal(`${articleDocs[0]._id}`);
+            expect(res.body.comment.votes).to.equal(7);
+          });
+      });
+      it('DELETE with invalid comment_id will return 400', () => {
+        return request
+          .delete(`/api/comments/test_id`)
+          .expect(400)
+          .then(res => {
+            expect(res.body.msg).to.equal('Bad Request');
+          });
+      });
+      it('DELETE with valid but non-present comment_id will return 404', () => {
+        return request
+          .delete(`/api/comments/507f191e810c19729de860ea`)
+          .expect(404)
+          .then(res => {
+            expect(res.body.msg).to.equal('Page Not Found');
           });
       });
     });
