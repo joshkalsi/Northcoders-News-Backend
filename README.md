@@ -17,7 +17,7 @@ npm install
 ```
 to add them all.
 
-### Installing
+### Config Setup
 
 You will need to create a config file for your Mongo Database URIs before you can start the server. This will contain an object that will contain keys for test, dev and production, and the required URIs and port numbers for each.
 
@@ -63,12 +63,33 @@ npm run seed:prod // USE CAREFULLY - THIS WILL RESEED THE HOSTED DATABASE
 ### Endpoints
 
 The endpoints for this API are as follows:
+
 GET:
 * **/api**: Default HTML homepage
 * **/api/topics**: Returns all topics
-* **/api/topics/:topic_slug/articles**: Returns all articles for a certain topic
- *e.g. /api/topics/football/articles*
+* **/api/topics/:topic_slug/articles**: Returns all articles for a certain topic. *e.g. /api/topics/football/articles*
 * **/api/articles**: Returns all articles
+* **/api/articles/:article_id**: Returns article with given Mongo ID. *e.g. /api/articles/507f191e810c19729de860ea*
+* **/api/articles/:article_id/comments**: Returns the comments on article with given Mongo ID. *e.g. /api/articles/507f191e810c19729de860ea/comments*
+* **/api/users/:username**: Returns user with given username. *e.g. /api/users/dedekind561*
+
+POST:
+* **/api/topics/:topic_slug/articles**: Creates an article for the provided topic. Needs to be sent a JSON body with properties:
+```
+{title: <STRING>, body: <STRING>, created_by: <username STRING>}
+```
+* **/api/articles/:article_id/comments**: Creates a new comment on an article with given Mongo ID. Needs to be sent a JSON body with properties:
+```
+{body: <STRING>, created_by: <username STRING>}
+```
+
+PATCH: 
+* **/api/articles/:article_id**: Increment or decrement the votes of an article by one. This requires a vote query of 'up' or 'down'. *e.g./api/articles/507f191e810c19729de860ea?vote=up*
+
+DELETE: 
+* **/api/comments/:comment_id**: Deletes comment with given Mongo ID. *e.g /api/comments/507f191e810c19729ea860de*
+
+
 
 ## Testing
 
@@ -78,9 +99,9 @@ npm test
 ```
 which will start the full test process. Each test will reseed the test database fully to ensure consistency in results.
 
-### Break down into end to end tests
+### Test Objectives
 
-Each test will check the functionality of an endpoint of the API. When testing a valid request, it will check the response code is correct, and that the data returned contains data matching what was originally seeded.
+Each test will check the functionality of an endpoint of the API. When testing a valid request, it will check the response code is correct, and that the data returned contains data matching what was originally seeded:
 
 ```
 it('GET returns 200 status and all topic objects', () => {
@@ -94,7 +115,7 @@ it('GET returns 200 status and all topic objects', () => {
           });
       });
 ```
-It will also check that any errors are correctly handled and a proper response is sent - for example, an invalid request will return a 400 code and an appropriate message.
+It will then check that any errors are correctly handled and a proper response is sent - for example, an invalid request will return a 400 code and an appropriate message:
 
 ```
 it('GET returns 400 error for invalid topic slug', () => {
@@ -110,7 +131,9 @@ it('GET returns 400 error for invalid topic slug', () => {
 
 ## Deployment
 
-Add additional notes about how to deploy this on a live system
+To deploy this server to a live production setting, you will need to host the Mongo database along with the Express server. There are many services that can do that - mLab and Heroku are simple places to start. 
+
+**Once you have a host for your Mongo database, remember to add the URI to the config file and the process environment of wherever is running the server.**
 
 ## Built With
 
