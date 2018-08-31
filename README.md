@@ -1,127 +1,128 @@
-## Northcoders News API
+# Northcoders News API
 
-### Background
+An Express server API that serves up data from the Northcoders News database. The database is built in MongoDB, and contains articles, comments on the articles, a list of users, and article topics.
 
-We will be building the API which to use in the Northcoders News Sprint during the Front End block of the course.
+## [Click here to see a running version of this program.](https://northcoders-news-jk.herokuapp.com/)
 
-Our database will be MongoDB. Your Mongoose models have been created for you so that you can see what the data should look like.
+## Getting Started
 
-### Mongoose Documentation
+These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
 
-The below are some of the model methods that you can call on your models.
+### Prerequisites
 
-* [find](http://mongoosejs.com/docs/api.html#model_Model.find)
-* [findOne](http://mongoosejs.com/docs/api.html#model_Model.findOne)
-* [findOneAndUpdate](http://mongoosejs.com/docs/api.html#model_Model.findOneAndUpdate)
-* [findOneAndRemove](http://mongoosejs.com/docs/api.html#model_Model.findOneAndRemove)
-* [findById](http://mongoosejs.com/docs/api.html#model_Model.findById)
-* [findByIdAndUpdate](http://mongoosejs.com/docs/api.html#model_Model.findByIdAndUpdate)
-* [findByIdAndRemove](http://mongoosejs.com/docs/api.html#model_Model.findByIdAndRemove)
-* [update](http://mongoosejs.com/docs/api.html#model_Model.update)
-* [create](https://mongoosejs.com/docs/api.html#model_Model.create)
-* [remove](http://mongoosejs.com/docs/api.html#model_Model-remove)
-* [save](http://mongoosejs.com/docs/api.html#model_Model-save)
-* [count](http://mongoosejs.com/docs/api.html#model_Model.count)
-* [populate](https://mongoosejs.com/docs/api.html#model_Model.populate)
+This project requires Express, Mongoose and Node for production, Nodemon for development, and Mocha, Chai and Supertest for testing. When first opening the project, simply run
 
-### Step 1 - Seeding
+```
+npm install
+```
+to add them all.
 
-Data has been provided for both testing and development environments so you will need to write a seed function to seed your database. You should think about how you will write your seed file to use either test data or dev data depending on the environment that you're running in.
+### Installing
 
-1.  You will need to seed the topics and users, followed by the articles and comments. 
+You will need to create a config file for your Mongo Database URIs before you can start the server. This will contain an object that will contain keys for test, dev and production, and the required URIs and port numbers for each.
 
-* Each article should have a `belongs_to` property, referenced by a topic's `topic_slug`, and have a `created_by` property that references a user's mongo `_id`. 
-* Each comment should also have `created_by` property that references a user's mongo `_id` and should also have a `belongs_to` property that references the specific article's mongo `_id`.
+* First, create a config folder, and create an index.js file inside of it.
 
-### Step 2 - Building and Testing
+* Inside this index.js file, insert the following object:
+```
+const ENV = process.env.NODE_ENV || 'dev';
 
-1.  Build your Express App
-2.  Mount an API Router onto your app
-3.  Define the routes described below
-4.  Define controller functions for each of your routes (remember to use `.populate` for `created_by` and `belongs_to` fields that are mongo ids! This will be extremely useful when you are working on the front-end!)
-5.  Use proper project configuration from the offset, being sure to treat development and test differently.
-6.  Test each route as you go. Remember to test the happy and the unhappy paths! Make sure your error messages are helpful and your error status codes are chosen correctly. Remember to seed the test database using the seeding function and make the saved data available to use within your test suite.
+const config = {
+  dev: {
+    DB_URL: 'mongodb://localhost:27017/northcoders_news',
+    PORT: 9090
+  },
+  test: {
+    DB_URL: 'mongodb://localhost:27017/northcoders_news_TEST'
+  },
+  production: {
+    DB_URL: <Mongo URI connection string for hosted database>
+  }
+};
 
-**HINT** Make sure to drop and reseed your test database with every test. This will make it much easier to keep track of your data throughout. In order for this to work, you are going to need to keep track of the MongoIDs your seeded docs have been given. In order to do this, you might want to consider what your seed file returns, and how you can use this in your tests.
+module.exports = config[ENV];
+```
+This is preset to create a test database called northcoders_news_TEST and a dev database called northcoders_news and sets the listening port to 9090.
+You will need to add in your own URI for a hosted Mongo database (through a service like mLab, for example).
 
-### Routes
-
-Your server should have the following end-points:
-
-```http
-GET /api 
-# Serves an HTML page with documentation for all the available endpoints
+## Use
+To start the server, use either the command 
+```
+npm run dev // starts server with nodemon - use this if you will be making changes to the server
+```
+or 
+```
+npm start // starts server normally with node - mainly for production use
+```
+There are two seed functions - one for dev, and one for production.
+```
+npm run seed:dev // This will reseed the development database
+npm run seed:prod // USE CAREFULLY - THIS WILL RESEED THE HOSTED DATABASE
 ```
 
-```http
-GET /api/topics
-# Get all the topics
+### Endpoints
+
+The endpoints for this API are as follows:
+GET:
+* **/api**: Default HTML homepage
+* **/api/topics**: Returns all topics
+* **/api/topics/:topic_slug/articles**: Returns all articles for a certain topic
+ *e.g. /api/topics/football/articles*
+* **/api/articles**: Returns all articles
+
+## Testing
+
+To run tests, use the command
+```
+npm test
+```
+which will start the full test process. Each test will reseed the test database fully to ensure consistency in results.
+
+### Break down into end to end tests
+
+Each test will check the functionality of an endpoint of the API. When testing a valid request, it will check the response code is correct, and that the data returned contains data matching what was originally seeded.
+
+```
+it('GET returns 200 status and all topic objects', () => {
+        return request
+          .get('/api/topics')
+          .expect(200)
+          .then(({ body }) => {
+            expect(body).to.have.all.keys('topics');
+            expect(body.topics.length).to.equal(topicDocs.length);
+            expect(body.topics[0].slug).to.equal(topicDocs[0].slug);
+          });
+      });
+```
+It will also check that any errors are correctly handled and a proper response is sent - for example, an invalid request will return a 400 code and an appropriate message.
+
+```
+it('GET returns 400 error for invalid topic slug', () => {
+        return request
+          .get('/api/topics/INVALID/articles') // Uppercase not allowed
+          .expect(400)
+          .then(res => {
+            expect(res.body.msg).to.equal('Bad Request');
+          });
+      });
+
 ```
 
-```http
-GET /api/topics/:topic_slug/articles
-# Return all the articles for a certain topic
-# e.g: `/api/topics/football/articles`
-```
+## Deployment
 
-```http
-POST /api/topics/:topic_slug/articles
-# Add a new article to a topic. This route requires a JSON body with title and body key value pairs
-# e.g: `{ "title": "new article", "body": "This is my new article content", "created_by": "user_id goes here"}`
-```
+Add additional notes about how to deploy this on a live system
 
-```http
-GET /api/articles
-# Returns all the articles
-```
+## Built With
 
-```http
-GET /api/articles/:article_id
-# Get an individual article
-```
+* [Express](https://expressjs.com/) - The web framework used
+* [MongoDB](https://www.mongodb.com/) - Database system
+* [Mongoose](https://mongoosejs.com/) - MongoDB interface for Node.JS
 
-```http
-GET /api/articles/:article_id/comments
-# Get all the comments for a individual article
-```
+## Authors
 
-```http
-POST /api/articles/:article_id/comments
-# Add a new comment to an article. This route requires a JSON body with body and created_by key value pairs
-# e.g: `{"body": "This is my new comment", "created_by": "user_id goes here"}`
-```
+* **Josh Kalsi** - *Initial work* - [joshkalsi](https://github.com/joshkalsi)
 
-```http
-PATCH /api/articles/:article_id
-# Increment or Decrement the votes of an article by one. This route requires a vote query of 'up' or 'down'
-# e.g: `/api/articles/:article_id?vote=up`
-```
+## Acknowledgments
 
-```http
-PATCH /api/comments/:comment_id
-# Increment or Decrement the votes of a comment by one. This route requires a vote query of 'up' or 'down'
-# e.g: `/api/comments/:comment_id?vote=down`
-```
-
-```http
-DELETE /api/comments/:comment_id
-# Deletes a comment
-```
-
-```http
-GET /api/users/:username
-# e.g: `/api/users/mitch123`
-# Returns a JSON object with the profile data for the specified user.
-```
-
-NOTE: When it comes to building your front end you'll find it extremely useful if your POST comment endpoint returns the new comment with the created_by property populated with the corresponding user object.
-
-### Step 3 - Hosting
-
-Once you are happy with your seed/dev file, prepare your project for production. You will need to seed the development data to mLab, and host the API on Heroku. If you've forgotten how to do this, you may want to look at this tutorial! https://www.sitepoint.com/deploy-rest-api-in-30-mins-mlab-heroku/
-
-### Step 4 - Preparing for your review and portfolio
-
-Finally, you should write a README for this project (and remove this one). The README should be broken down like this: https://gist.github.com/PurpleBooth/109311bb0361f32d87a2
-
-It should also include the link where your herokuapp is hosted.
+* Mitch, the angel who walks among us
+* All the other tutors (not quite as angelic but still fantastic!)
