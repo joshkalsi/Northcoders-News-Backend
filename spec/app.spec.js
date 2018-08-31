@@ -101,6 +101,7 @@ describe('nc_news', () => {
             expect(res.body.article.title).to.equal('Best Cats');
             expect(res.body.article.belongs_to).to.equal('cats');
             expect(res.body.article.created_by.username).to.equal('butter_bridge');
+            expect(res.body.article.comment_count).to.equal(0);
           });
       });
       it('POST returns a 404 code when trying to add to a nonexistent topic', () => {
@@ -137,6 +138,7 @@ describe('nc_news', () => {
             expect(res.body.articles.length).to.equal(4);
             expect(res.body.articles[3].title).to.equal('UNCOVERED: catspiracy to bring down democracy');
             expect(res.body.articles[1].created_by.name).to.equal('mitch');
+            expect(res.body.articles[0].comment_count).to.equal(2);
           });
       });
     });
@@ -150,6 +152,7 @@ describe('nc_news', () => {
             expect(res.body).to.have.all.keys('article');
             expect(res.body.article.title).to.equal('7 inspirational thought leaders from Manchester UK');
             expect(res.body.article.created_by.name).to.equal('mitch');
+            expect(res.body.article.comment_count).to.equal(2);
           });
       });
       it('GET returns 400 error for invalid article_id', () => {
