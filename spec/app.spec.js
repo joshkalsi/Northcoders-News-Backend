@@ -6,11 +6,12 @@ const request = require('supertest')(app);
 const mongoose = require('mongoose');
 const seedDB = require('../seed/seed');
 const testData = require('../seed/testData');
+const ObjectId = mongoose.Types.ObjectId;
 
 describe('nc_news', () => {
   let commentDocs;
   let articleDocs;
-  // let topicDocs;
+  let topicDocs;
   let userDocs;
 
   beforeEach(() => {
@@ -18,7 +19,7 @@ describe('nc_news', () => {
       .then((docs) => {
         commentDocs = docs[0];
         articleDocs = docs[1];
-        // topicDocs = docs[2];
+        topicDocs = docs[2];
         userDocs = docs[3];
       });
   });
@@ -53,10 +54,10 @@ describe('nc_news', () => {
         return request
           .get('/api/topics')
           .expect(200)
-          .then(res => {
-            expect(res.body).to.have.all.keys('topics');
-            expect(res.body.topics.length).to.equal(2);
-            expect(res.body.topics[0].slug).to.equal('mitch');
+          .then(({ body }) => {
+            expect(body).to.have.all.keys('topics');
+            expect(body.topics.length).to.equal(topicDocs.length);
+            expect(body.topics[0].slug).to.equal(topicDocs[0].slug);
           });
       });
     });
@@ -66,10 +67,10 @@ describe('nc_news', () => {
         return request
           .get('/api/topics/mitch/articles')
           .expect(200)
-          .then(res => {
-            expect(res.body).to.have.all.keys('articles');
-            expect(res.body.articles.length).to.equal(2);
-            expect(res.body.articles[0].belongs_to).to.equal('mitch');
+          .then(({ body }) => {
+            expect(body).to.have.all.keys('articles');
+            expect(body.articles.length).to.equal(2);
+            expect(body.articles[0].belongs_to).to.equal(articleDocs[0].belongs_to);
           });
       });
       it('GET returns 400 error for invalid topic slug', () => {
@@ -96,12 +97,10 @@ describe('nc_news', () => {
           .post('/api/topics/cats/articles')
           .send({ title: 'Best Cats', body: 'These are the best cats', created_by: 'butter_bridge' })
           .expect(201)
-          .then(res => {
-            expect(res.body).to.have.all.keys('article');
-            expect(res.body.article.title).to.equal('Best Cats');
-            expect(res.body.article.belongs_to).to.equal('cats');
-            expect(res.body.article.created_by.username).to.equal('butter_bridge');
-            expect(res.body.article.comment_count).to.equal(0);
+          .then(({ body }) => {
+            expect(body).to.have.all.keys('article');
+            expect(body.article._id).to.equal(new ObjectId(body.article._id).toHexString()); // valid ID cast to a new object ID will not change - invalid one will
+            expect(body.article.comment_count).to.equal(0);
           });
       });
       it('POST returns a 404 code when trying to add to a nonexistent topic', () => {
@@ -133,12 +132,12 @@ describe('nc_news', () => {
         return request
           .get('/api/articles')
           .expect(200)
-          .then(res => {
-            expect(res.body).to.have.all.keys('articles');
-            expect(res.body.articles.length).to.equal(4);
-            expect(res.body.articles[3].title).to.equal('UNCOVERED: catspiracy to bring down democracy');
-            expect(res.body.articles[1].created_by.name).to.equal('mitch');
-            expect(res.body.articles[0].comment_count).to.equal(2);
+          .then(({ body }) => {
+            expect(body).to.have.all.keys('articles');
+            expect(body.articles.length).to.equal(articleDocs.length);
+            expect(body.articles[3].title).to.equal(articleDocs[3].title);
+            expect(body.articles[1].created_by._id).to.equal(userDocs[1]._id.toHexString());
+            expect(body.articles[0].comment_count).to.equal(2);
           });
       });
     });
@@ -148,11 +147,11 @@ describe('nc_news', () => {
         return request
           .get(`/api/articles/${articleDocs[1]._id}`)
           .expect(200)
-          .then(res => {
-            expect(res.body).to.have.all.keys('article');
-            expect(res.body.article.title).to.equal('7 inspirational thought leaders from Manchester UK');
-            expect(res.body.article.created_by.name).to.equal('mitch');
-            expect(res.body.article.comment_count).to.equal(2);
+          .then(({ body }) => {
+            expect(body).to.have.all.keys('article');
+            expect(body.article.title).to.equal(articleDocs[1].title);
+            expect(body.article.created_by._id).to.equal(userDocs[1]._id.toHexString());
+            expect(body.article.comment_count).to.equal(2);
           });
       });
       it('GET returns 400 error for invalid article_id', () => {
@@ -178,12 +177,15 @@ describe('nc_news', () => {
         return request
           .get(`/api/articles/${articleDocs[3]._id}/comments`)
           .expect(200)
-          .then(res => {
-            expect(res.body).to.have.all.keys('comments');
-            expect(res.body.comments.length).to.equal(2);
-            expect(res.body.comments[0].body).to.equal('What do you see? I have no idea where this will lead us. This place I speak of, is known as the Black Lodge.');
-            expect(res.body.comments[1].belongs_to.title).to.equal('UNCOVERED: catspiracy to bring down democracy');
-            expect(res.body.comments[1].created_by.name).to.equal('jonny');
+          .then(({ body }) => {
+            expect(body).to.have.all.keys('comments');
+            expect(body.comments.length).to.equal(2);
+            const filteredComments = commentDocs.filter(comment => {
+              return comment.belongs_to === articleDocs[3]._id;
+            });
+            expect(body.comments[0].body).to.equal(filteredComments[0].body);
+            expect(body.comments[1].belongs_to._id).to.equal(filteredComments[1].belongs_to.toHexString());
+            expect(body.comments[1].created_by._id).to.equal(filteredComments[1].created_by.toHexString());
           });
       });
       it('GET returns 400 code with invalid article_id', () => {
@@ -210,11 +212,11 @@ describe('nc_news', () => {
           .post(`/api/articles/${articleDocs[2]._id}/comments`)
           .send({ body: 'first!!!11!1', created_by: 'dedekind561' })
           .expect(201)
-          .then(res => {
-            expect(res.body).to.have.all.keys('comment');
-            expect(res.body.comment.body).to.equal('first!!!11!1');
-            expect(res.body.comment.created_by.username).to.equal('dedekind561');
-            expect(res.body.comment.belongs_to.title).to.equal('They\'re not exactly dogs, are they?');
+          .then(({ body }) => {
+            expect(body).to.have.all.keys('comment');
+            expect(body.comment.body).to.equal('first!!!11!1');
+            expect(body.comment.created_by.username).to.equal('dedekind561');
+            expect(body.comment._id).to.equal(new ObjectId(body.comment._id).toHexString()); // valid ID cast to a new object ID will not change - invalid one will;
           });
       });
       it('POST returns 400 when article_id is invalid', () => {
@@ -251,30 +253,30 @@ describe('nc_news', () => {
         return request
           .patch(`/api/articles/${articleDocs[0]._id}?vote=up`)
           .expect(200)
-          .then(res => {
-            expect(res.body).to.have.all.keys('article');
-            expect(res.body.article.title).to.equal('Living in the shadow of a great man');
-            expect(res.body.article.votes).to.equal(1);
+          .then(({ body }) => {
+            expect(body).to.have.all.keys('article');
+            expect(body.article.title).to.equal(articleDocs[0].title);
+            expect(body.article.votes).to.equal(articleDocs[0].votes + 1);
           });
       });
       it('PATCH with a valid article_id and query will decrement votes and return 200 code', () => {
         return request
           .patch(`/api/articles/${articleDocs[0]._id}?vote=down`)
           .expect(200)
-          .then(res => {
-            expect(res.body).to.have.all.keys('article');
-            expect(res.body.article.title).to.equal('Living in the shadow of a great man');
-            expect(res.body.article.votes).to.equal(-1);
+          .then(({ body }) => {
+            expect(body).to.have.all.keys('article');
+            expect(body.article.title).to.equal(articleDocs[0].title);
+            expect(body.article.votes).to.equal(articleDocs[0].votes - 1);
           });
       });
       it('PATCH with a valid article_id but no query will not affect votes', () => {
         return request
           .patch(`/api/articles/${articleDocs[0]._id}`)
           .expect(200)
-          .then(res => {
-            expect(res.body).to.have.all.keys('article');
-            expect(res.body.article.title).to.equal('Living in the shadow of a great man');
-            expect(res.body.article.votes).to.equal(0);
+          .then(({ body }) => {
+            expect(body).to.have.all.keys('article');
+            expect(body.article.title).to.equal(articleDocs[0].title);
+            expect(body.article.votes).to.equal(articleDocs[0].votes);
           });
       });
       it('PATCH with invalid article_id will return 400', () => {
@@ -320,30 +322,30 @@ describe('nc_news', () => {
         return request
           .patch(`/api/comments/${commentDocs[0]._id}?vote=up`)
           .expect(200)
-          .then(res => {
-            expect(res.body).to.have.all.keys('comment');
-            expect(res.body.comment.belongs_to._id).to.equal(`${articleDocs[0]._id}`);
-            expect(res.body.comment.votes).to.equal(8);
+          .then(({ body }) => {
+            expect(body).to.have.all.keys('comment');
+            expect(body.comment.belongs_to._id).to.equal(`${articleDocs[0]._id}`);
+            expect(body.comment.votes).to.equal(commentDocs[0].votes + 1);
           });
       });
       it('PATCH with a valid comment_id and query will decrement votes and return 200 code', () => {
         return request
           .patch(`/api/comments/${commentDocs[0]._id}?vote=down`)
           .expect(200)
-          .then(res => {
-            expect(res.body).to.have.all.keys('comment');
-            expect(res.body.comment.belongs_to._id).to.equal(`${articleDocs[0]._id}`);
-            expect(res.body.comment.votes).to.equal(6);
+          .then(({ body }) => {
+            expect(body).to.have.all.keys('comment');
+            expect(body.comment.belongs_to._id).to.equal(`${articleDocs[0]._id}`);
+            expect(body.comment.votes).to.equal(commentDocs[0].votes - 1);
           });
       });
       it('PATCH with a valid comment_id but no query will not affect votes', () => {
         return request
           .patch(`/api/comments/${commentDocs[0]._id}`)
           .expect(200)
-          .then(res => {
-            expect(res.body).to.have.all.keys('comment');
-            expect(res.body.comment.belongs_to._id).to.equal(`${articleDocs[0]._id}`);
-            expect(res.body.comment.votes).to.equal(7);
+          .then(({ body }) => {
+            expect(body).to.have.all.keys('comment');
+            expect(body.comment.belongs_to._id).to.equal(`${articleDocs[0]._id}`);
+            expect(body.comment.votes).to.equal(commentDocs[0].votes);
           });
       });
       it('PATCH with invalid comment_id will return 400', () => {
@@ -377,10 +379,10 @@ describe('nc_news', () => {
         return request
           .delete(`/api/comments/${commentDocs[0]._id}`)
           .expect(200)
-          .then(res => {
-            expect(res.body).to.have.all.keys('comment');
-            expect(res.body.comment.belongs_to._id).to.equal(`${articleDocs[0]._id}`);
-            expect(res.body.comment.votes).to.equal(7);
+          .then(({ body }) => {
+            expect(body).to.have.all.keys('comment');
+            expect(body.comment.belongs_to._id).to.equal(`${articleDocs[0]._id}`);
+            expect(body.comment.votes).to.equal(commentDocs[0].votes);
           });
       });
       it('DELETE with invalid comment_id will return 400', () => {
@@ -410,10 +412,10 @@ describe('nc_news', () => {
         return request
           .get('/api/users/butter_bridge')
           .expect(200)
-          .then(res => {
-            expect(res.body).to.have.all.keys('user');
-            expect(res.body.user.username).to.equal('butter_bridge');
-            expect(res.body.user._id).to.equal(`${userDocs[0]._id}`);
+          .then(({ body }) => {
+            expect(body).to.have.all.keys('user');
+            expect(body.user.username).to.equal(userDocs[0].username);
+            expect(body.user._id).to.equal(`${userDocs[0]._id}`);
           });
       });
       it('GET with invalid username will return 400', () => {
