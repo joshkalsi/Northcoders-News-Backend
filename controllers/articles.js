@@ -2,37 +2,34 @@ const { Article, Comment, User } = require('../models/index');
 
 exports.getArticles = (req, res, next) => {
   return Article.find()
+    .lean()
     .populate('created_by')
     .then(articles => {
       const articleComments = articles.map(article => {
         return Comment.find({ belongs_to: article._id });
       });
-      return Promise.all([Promise.all(articleComments), articles]);
+      return Promise.all([articles, ...articleComments]);
     })
-    .then(([comments, articles]) => {
-      const modArticles = articles.map((article, index) => {
-        let modArticle = { ...article._doc, comment_count: 0 };
-        modArticle.comment_count = comments[index].length;
-        return modArticle;
+    .then(([articles, ...comments]) => {
+      articles.forEach((article, index) => {
+        article.comment_count = comments[index].length;
       });
-      res.send({ modArticles });
+      res.send({ articles });
     })
     .catch(err => next(err));
 };
 
 exports.getArticleByID = (req, res, next) => {
   return Article.findOne({ _id: req.params.article_id })
+    .lean()
     .populate('created_by')
     .then(article => {
       if (!article) return Promise.reject({ status: 404, msg: 'Page Not Found' });
-      return Promise.all([Comment.find({ belongs_to: article._id })
-        .populate('belongs_to')
-        .populate('created_by'), article]);
+      return Promise.all([Comment.find({ belongs_to: article._id }), article]);
     })
     .then(([comments, article]) => {
-      const modArticle = { ...article._doc, comment_count: 0 };
-      modArticle.comment_count = comments.length;
-      res.status(200).send({ article: modArticle });
+      article.comment_count = comments.length;
+      res.status(200).send({ article });
     })
     .catch(err => {
       if (err.name === 'CastError') next({ status: 400, msg: 'Bad Request' });

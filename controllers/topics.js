@@ -38,11 +38,12 @@ exports.postArticle = (req, res, next) => {
     })
     .then(article => {
       return Article.findOne({ _id: article._id })
+        .lean()
         .populate('created_by');
     })
     .then(article => {
-      const modArticle = { ...article._doc, comment_count: 0 };
-      res.status(201).send({ modArticle });
+      article.comment_count = 0;
+      res.status(201).send({ article });
     })
     .catch(err => next(err));
 };
