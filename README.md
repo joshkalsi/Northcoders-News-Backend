@@ -4,22 +4,23 @@ An Express server API that serves up data from the Northcoders News database. Th
 
 ## [Click here to see a running version of this program.](https://northcoders-news-jk.herokuapp.com/)
 
-## Getting Started
-
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
-
 ### Prerequisites
 
-This project requires Express, Mongoose and Node for production, Nodemon for development, and Mocha, Chai and Supertest for testing. When first opening the project, simply run
+This project requires NodeJS, NPM (Node Project Manager) and MongoDB. For instructions on how to install these, use the following links:
+
+* Node and NPM: [Windows](http://blog.teamtreehouse.com/install-node-js-npm-windows) | [Mac](http://blog.teamtreehouse.com/install-node-js-npm-mac) | [Linux](http://blog.teamtreehouse.com/install-node-js-npm-linux)
+* [MongoDB](https://docs.mongodb.com/manual/installation/)
+
+### Setup and Dependencies
+
+This project is built using Express as a web framework, Mongoose to interact with our Mongo database, and Nodemon for when changes are being made in development. It also uses Mocha, Chai and Supertest for testing. When first opening the project, simply run
 
 ```
 npm install
 ```
-to add them all.
+to install all of these.
 
-### Config Setup
-
-You will need to create a config file for your Mongo Database URIs before you can start the server. This will contain an object that will contain keys for test, dev and production, and the required URIs and port numbers for each.
+You will also need to create a config file for your Mongo Database URIs before you can start the server. This will contain an object that will contain keys for test and dev environments, and the required URIs and port numbers for each.
 
 * First, create a config folder, and create an index.js file inside of it.
 
@@ -34,30 +35,32 @@ const config = {
   },
   test: {
     DB_URL: 'mongodb://localhost:27017/northcoders_news_TEST'
-  },
-  production: {
-    DB_URL: <Mongo URI connection string for hosted database>
   }
 };
 
 module.exports = config[ENV];
 ```
 This is preset to create a test database called northcoders_news_TEST and a dev database called northcoders_news and sets the listening port to 9090.
-You will need to add in your own URI for a hosted Mongo database (through a service like mLab, for example).
 
 ## Use
+
+First, run the command 
+``` 
+mongod 
+``` 
+in your terminal of choice - this will start Mongo listening for requests to the databases. You will also need to seed the dev database with initial datasets - this can be done with the command:
+``` 
+npm run seed:dev 
+```
+
+
 To start the server, use either the command 
 ```
 npm run dev // starts server with nodemon - use this if you will be making changes to the server
 ```
 or 
 ```
-npm start // starts server normally with node - mainly for production use
-```
-There are two seed functions - one for dev, and one for production.
-```
-npm run seed:dev // This will reseed the development database
-npm run seed:prod // USE CAREFULLY - THIS WILL RESEED THE HOSTED DATABASE
+npm start // starts server normally with Node - mainly for production use
 ```
 
 ### Endpoints
@@ -128,12 +131,6 @@ it('GET returns 400 error for invalid topic slug', () => {
       });
 
 ```
-
-## Deployment
-
-To deploy this server to a live production setting, you will need to host the Mongo database along with the Express server. There are many services that can do that - mLab and Heroku are simple places to start. 
-
-**Once you have a host for your Mongo database, remember to add the URI to the config file and the process environment of wherever is running the server.**
 
 ## Built With
 

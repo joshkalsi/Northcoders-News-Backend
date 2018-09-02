@@ -17,10 +17,7 @@ describe('nc_news', () => {
   beforeEach(() => {
     return seedDB(testData)
       .then((docs) => {
-        commentDocs = docs[0];
-        articleDocs = docs[1];
-        topicDocs = docs[2];
-        userDocs = docs[3];
+        [commentDocs, articleDocs, topicDocs, userDocs] = docs;
       });
   });
 
@@ -99,7 +96,7 @@ describe('nc_news', () => {
           .expect(201)
           .then(({ body }) => {
             expect(body).to.have.all.keys('article');
-            expect(body.article._id).to.equal(new ObjectId(body.article._id).toHexString()); // valid ID cast to a new object ID will not change - invalid one will
+            expect(body.article._id).to.equal(`${new ObjectId(body.article._id)}`);
             expect(body.article.comment_count).to.equal(0);
           });
       });
@@ -136,7 +133,7 @@ describe('nc_news', () => {
             expect(body).to.have.all.keys('articles');
             expect(body.articles.length).to.equal(articleDocs.length);
             expect(body.articles[3].title).to.equal(articleDocs[3].title);
-            expect(body.articles[1].created_by._id).to.equal(userDocs[1]._id.toHexString());
+            expect(body.articles[1].created_by._id).to.equal(`${userDocs[1]._id}`);
             expect(body.articles[0].comment_count).to.equal(2);
           });
       });
@@ -150,7 +147,7 @@ describe('nc_news', () => {
           .then(({ body }) => {
             expect(body).to.have.all.keys('article');
             expect(body.article.title).to.equal(articleDocs[1].title);
-            expect(body.article.created_by._id).to.equal(userDocs[1]._id.toHexString());
+            expect(body.article.created_by._id).to.equal(`${userDocs[1]._id}`);
             expect(body.article.comment_count).to.equal(2);
           });
       });
@@ -184,8 +181,7 @@ describe('nc_news', () => {
               return comment.belongs_to === articleDocs[3]._id;
             });
             expect(body.comments[0].body).to.equal(filteredComments[0].body);
-            expect(body.comments[1].belongs_to._id).to.equal(filteredComments[1].belongs_to.toHexString());
-            expect(body.comments[1].created_by._id).to.equal(filteredComments[1].created_by.toHexString());
+            expect(body.comments[1].created_by._id).to.equal(`${filteredComments[1].created_by}`);
           });
       });
       it('GET returns 400 code with invalid article_id', () => {
@@ -216,7 +212,7 @@ describe('nc_news', () => {
             expect(body).to.have.all.keys('comment');
             expect(body.comment.body).to.equal('first!!!11!1');
             expect(body.comment.created_by.username).to.equal('dedekind561');
-            expect(body.comment._id).to.equal(new ObjectId(body.comment._id).toHexString()); // valid ID cast to a new object ID will not change - invalid one will;
+            expect(body.comment._id).to.equal(`${new ObjectId(body.comment._id)}`);
           });
       });
       it('POST returns 400 when article_id is invalid', () => {

@@ -20,6 +20,10 @@ app.get('/', (req, res) => {
 
 app.use('/api', apiRouter);
 
+app.get('/*', (req, res) => {
+  res.status(404).send('Page not found!');
+});
+
 app.use((err, req, res, next) => {
   if (err.status) {
     res.status(err.status).send(err);

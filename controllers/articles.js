@@ -43,7 +43,6 @@ exports.getCommentsforArticle = (req, res, next) => {
     .then(article => {
       if (!article) return Promise.reject({ status: 404, msg: 'Page Not Found' });
       return Comment.find({ belongs_to: article._id })
-        .populate('belongs_to')
         .populate('created_by');
     })
     .then(comments => {
