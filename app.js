@@ -1,13 +1,16 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const cors = require('cors');
+
 const apiRouter = require('./routes/apiRouter');
 let DB_URL = process.env.MONGODB_URI || require('./config').DB_URL;
 const app = express();
-
 app.use(express.json());
 app.use(express.urlencoded({
   extended: true
 }));
+app.use(cors());
+
 
 mongoose.connect(DB_URL, { useNewUrlParser: true })
   .then(() => {
