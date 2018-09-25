@@ -2,7 +2,7 @@
 
 An Express server API that serves up data from the Northcoders News database. The database is built in MongoDB, and contains articles, comments on the articles, a list of users, and article topics.
 
-## [Click here to see a running version of this program.](https://northcoders-news-jk.herokuapp.com/)
+## [Click here to see a running version of this program.](https://ncnews-joshkalsi-backend.herokuapp.com/)
 
 ### Prerequisites
 
