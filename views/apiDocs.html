@@ -4,57 +4,48 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Hello Bulma!</title>
+  <title>NC News Backend</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.1/css/bulma.min.css">
   <script defer src="https://use.fontawesome.com/releases/v5.1.0/js/all.js"></script>
 </head>
 
 <body>
-  <section class="hero is-primary is-medium">
-    <!-- Hero head: will stick at the top -->
-    <div class="hero-head">
-      <nav class="level">
-        <!-- Left side -->
-        <div class="level-left">
-          <img src="https://northcoders.com/images/logos/learn_to_code_manchester_rw_original.png" alt="Northcoders logo" style="height: 100px;">
-        </div>
-
-        <!-- Right side -->
-        <div class="level-right">
-
-        </div>
-      </nav>
-    </div>
-
-    <!-- Hero content: will be in the middle -->
-    <div class="hero-body">
-      <div class="container has-text-centered">
-        <h1 class="title">
-          Northcoders News
-        </h1>
-        <h2 class="subtitle">
-          API Server
-        </h2>
-      </div>
-    </div>
-
-    <!-- Hero footer: will stick at the bottom -->
-    <div class="hero-foot">
-      <nav class="tabs">
-        <div class="container">
-          <ul>
-            <li class="is-active"><a>Overview</a></li>
-            <li><a>Modifiers</a></li>
-            <li><a>Grid</a></li>
-            <li><a>Elements</a></li>
-            <li><a>Components</a></li>
-            <li><a>Layout</a></li>
-          </ul>
-        </div>
-      </nav>
-    </div>
-  </section>
-
+  <div style="text-align:center;">
+    <h1 style="font-size:30px;">API Endpoints</h1>
+    <br>
+    <h2>GET:</h2>
+    <ul>
+      <li><b>/api/topics:</b> Returns all topics</li>
+      <li><b>api/topics/:topic_slug/articles:</b> Returns all articles for a certain topic. <i>e.g.
+          /api/topics/football/articles</i></li>
+      <li><b>/api/articles:</b> Returns all articles</li>
+      <li><b>/api/articles/:article_id/comments:</b> Returns the comments on article with given Mongo ID. <i>e.g.
+          /api/articles/507f191e810c19729de860ea/comments</i></li>
+      <li><b>/api/users/:username:</b> Returns user with given username. <i>e.g. /api/users/dedekind561</i></li>
+    </ul>
+    <br>
+    <h2>POST</h2>
+    <ul>
+      <li><b>/api/topics/:topic_slug/articles:</b> Creates an article for the provided topic. Needs to be sent a JSON
+        body
+        with properties: <br> <code>{title: <i>string</i>, body: <i>string</i>, created_by: <i>string (valid username)</i>}</code></li>
+      <li><b>/api/articles/:article_id/comments:</b> Creates a new comment on an article with given Mongo ID. Needs to
+        be
+        sent a JSON body with properties: <br> <code>{body: <i>string</i>, created_by: <i>string (valid username)</i>}</code></li>
+    </ul>
+    <br>
+    <h2>PATCH</h2>
+    <ul>
+      <li><b>/api/articles/:article_id:</b> Increment or decrement the votes of an article by one. This requires a vote
+        query of 'up' or 'down'. <i>e.g./api/articles/507f191e810c19729de860ea?vote=up</i> </li>
+    </ul>
+    <br>
+    <h2>DELETE</h2>
+    <ul>
+      <li><b>/api/comments/:comment_id:</b> Deletes comment with given Mongo ID. <i>e.g
+          /api/comments/507f191e810c19729ea860de</i></li>
+    </ul>
+  </div>
 </body>
 
 </html>

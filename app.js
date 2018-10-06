@@ -18,7 +18,7 @@ mongoose.connect(DB_URL, { useNewUrlParser: true })
   });
 
 app.get('/', (req, res) => {
-  res.status(200).send('Homepage');
+  res.redirect('/api')
 });
 
 app.use('/api', apiRouter);
